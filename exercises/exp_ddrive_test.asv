@@ -13,8 +13,8 @@ function exp = exp_ddrive_test(varargin)
     
     % Instantiate the robot
     exp.robot.platform = model_platform2d_ddrive([2 0.75 90*pi/180]);
-%     exp.robot.platform.wheelRadius = [0.030 0.0303];    
-%     exp.robot.platform.wheelDistance = 0.255;
+    exp.robot.platform.wheelRadius = [0.030 0.0303];    
+    %exp.robot.platform.wheelDistance = 0.255;
     exp.robot.radius = 0.14;
     exp.robot.color = [0 0 1];
     exp.robot.wheelRadius = 0.03;
@@ -48,7 +48,7 @@ function exp = exp_ddrive_test(varargin)
     
 %     exp.robot2.platform = model_platform2d_omni([2.5 3 90*pi/180]);
 %     exp.robot2.radius = 0.14;
-%     exp.robot2.color = [0.5 0 0.1]; % Farbe setzen
+%     exp.robot2.color = [0.5 0 1]; % Farbe setzen
 %     exp.robot2.sink = block_sink('platform');
 %     exp.robot2.controller = guidance_omni_circle();
 %     exp.robot2.controller.radius = 1.5;
