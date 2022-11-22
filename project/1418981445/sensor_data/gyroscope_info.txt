@@ -1,0 +1,6 @@
+Name:	Gyroscope Uncalibrated
+Typ:	Gyroskop (ungefiltert)
+Hersteller:	hTC Corp.
+Version:	1
+Maximaler Wertebereich:	200.0
+Auflösung:	1.0

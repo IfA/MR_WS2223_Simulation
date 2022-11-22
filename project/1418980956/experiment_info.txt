@@ -1,0 +1,43 @@
+﻿Gerät
+
+Modellname:	HTC One_M8
+Hersteller:	HTC
+Produktname:	m8_google
+Androidversion:	19
+CPU_ABI:	armeabi-v7a
+CPU_ABI2:	armeabi
+Tablet?	false
+
+
+Allgemeine Experimentinformationen
+
+Experimentname:	Artificial Circle
+Experimentkommentar:	Sample
+Experiment-ID:	1418980956
+Zeitpunkt der Erstellung:	19. Dezember 2014 10:23:59 MEZ
+Dauer (ms):	300507
+
+
+Zusammenfassung des Beschleunigungssensors
+
+Eingestellte Abtastrate:	Mittel
+Reale Abtastrate:	15.2 Hz
+Aufgenommene Werte:	4554
+Verlorene Werte:	0
+
+
+Zusammenfassung des Gyroskops (ungefiltert)
+
+Eingestellte Abtastrate:	Mittel
+Reale Abtastrate:	15.2 Hz
+Aufgenommene Werte:	2775
+Verlorene Werte:	1779
+
+
+Zusammenfassung der GPS-Daten
+
+Reale Abtastrate:	1.0 Hz
+Aufgenommene Werte:	300
+Verlorene Werte:	0
+
+

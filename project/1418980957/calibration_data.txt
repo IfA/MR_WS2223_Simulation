@@ -1,0 +1,53 @@
+Allgemein
+
+Aufnahmezeitpunkt:	10. Dezember 2014 12:06:24 MEZ
+Anzahl aufgenommener Werte:	50
+
+
+Beschleunigungssensor
+
+Kalibriert:	Ja
+Aufnahmedauer:	3.2s
+Arithmetisches Mittel:	X = -0.1268, Y = 0.1542, Z = 9.698199
+Standardabweichung:	X = 0.009987748, Y = 0.008592831, Z = 0.0145251695
+Betrag:	9.700254
+
+
+Gyroskop (vorgefiltert)
+
+Kalibriert:	Ja
+Aufnahmedauer:	3.5s
+Arithmetisches Mittel:	X = 0.0188, Y = -0.0014, Z = -0.0064
+Standardabweichung:	X = 0.059851516, Y = 0.0053490414, Z = 0.014813121
+
+
+Gyroskop (ungefiltert)
+
+Kalibriert:	Ja
+Aufnahmedauer:	3.2s
+Arithmetisches Mittel:	X = 0.011399999, Y = -0.0023999999, Z = -0.005
+Standardabweichung:	X = 0.037634652, Y = 0.004314191, Z = 0.0081441095
+
+
+Barometer
+
+Kalibriert:	Ja
+Aufnahmedauer:	3.1s
+Arithmetisches Mittel:	X = 947.2058, Y = 0.0, Z = 0.0
+Standardabweichung:	X = 216.16461, Y = 0.0023989794, Z = 4.623962
+
+
+Magnetometer (vorgefiltert)
+
+Kalibriert:	Ja
+Aufnahmedauer:	3.1s
+Arithmetisches Mittel:	X = -2160.4067, Y = 18.3458, Z = -3.1697313E30
+Standardabweichung:	X = 10568.198, Y = 6.64352, Z = 1.5686103E31
+
+
+Magnetometer (ungefiltert)
+
+Kalibriert:	Ja
+Aufnahmedauer:	3.2s
+Arithmetisches Mittel:	X = -216.5662, Y = -233.603, Z = -33.7238
+Standardabweichung:	X = 0.42159978, Y = 0.36164242, Z = 0.37358102

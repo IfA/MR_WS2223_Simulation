@@ -1,0 +1,6 @@
+Nachname: 
+Vorname: 
+Marikelnummer: 
+Studiengang: 
+Immatrikulationsjahr: 
+

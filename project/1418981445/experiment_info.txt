@@ -1,0 +1,43 @@
+Gerät
+
+Modellname:	HTC One_M8
+Hersteller:	HTC
+Produktname:	m8_google
+Androidversion:	19
+CPU_ABI:	armeabi-v7a
+CPU_ABI2:	armeabi
+Tablet?	false
+
+
+Allgemeine Experimentinformationen
+
+Experimentname:	Motion
+Experimentkommentar:	Sample
+Experiment-ID:	1418981445
+Zeitpunkt der Erstellung:	19. Dezember 2014 10:34:22 MEZ
+Dauer (ms):	647521
+
+
+Zusammenfassung des Beschleunigungssensors
+
+Eingestellte Abtastrate:	Mittel
+Reale Abtastrate:	15.2 Hz
+Aufgenommene Werte:	9812
+Verlorene Werte:	0
+
+
+Zusammenfassung des Gyroskops (ungefiltert)
+
+Eingestellte Abtastrate:	Mittel
+Reale Abtastrate:	15.2 Hz
+Aufgenommene Werte:	9714
+Verlorene Werte:	98
+
+
+Zusammenfassung der GPS-Daten
+
+Reale Abtastrate:	1.0 Hz
+Aufgenommene Werte:	642
+Verlorene Werte:	5
+
+

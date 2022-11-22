@@ -1,0 +1,6 @@
+Name:	Accelerometer Sensor
+Typ:	Beschleunigungssensor
+Hersteller:	HTC Group Ltd.
+Version:	1
+Maximaler Wertebereich:	19.6133
+Auflösung:	0.01
