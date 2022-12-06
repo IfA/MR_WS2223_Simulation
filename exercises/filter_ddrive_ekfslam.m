@@ -61,10 +61,10 @@ function filter = filter_ddrive_ekfslam()
         diag.hSigmaPhi = [line('Parent', diag.axErrPhi, 'XData', [], 'YData', [], 'Color', [1 0 0], 'LineStyle', '--'), ...
                           line('Parent', diag.axErrPhi, 'XData', [], 'YData', [], 'Color', [1 0 0], 'LineStyle', '--')];
         diag.hErrPhi = line('Parent', diag.axErrPhi, 'XData', [], 'YData', [], 'Color', [0 0 1]);
-        ylabel('error_Phi in °');
-        diag.axNees = axes('Parent', f, 'XGrid', 'on', 'YGrid', 'on', 'OuterPosition', [0, 0, 1, 1/4]);
-        ylabel('NEES');
-        xlabel('Time [s]');        
+        ylabel('error_{\phi} in °');
+%         diag.axNees = axes('Parent', f, 'XGrid', 'on', 'YGrid', 'on', 'OuterPosition', [0, 0, 1, 1/4]);
+%         ylabel('NEES');
+%         xlabel('Time [s]');        
     end
 
     function diag = updateErrorFigureLog(block, f, diag, logPos, t, out, debug, state)
@@ -170,7 +170,98 @@ function [state, out, debugOut] = filterStep(block, t, state, odometer, sensor, 
         
         % TODO: implement the prediction step
         
+        % to simplify the equations, we assume a v/omega controlled
+        % differential drive and convert our 'real' inputs to v/omega
+        v = (R_R * dtheta_R + R_L * dtheta_L) / 2;
+        omega = (R_R * dtheta_R - R_L * dtheta_L) / (2 * a);
+
+        % some more abbreviations (see slides of exercise 2)
+        phi = x(3);
+        sk = sin(phi);
+        ck = cos(phi);
+        skp1 = sin(phi + T * omega);
+        ckp1 = cos(phi + T * omega);
         
+        % do state prediction
+        if block.useNumericPrediction
+            % Use numeric integration
+            % This is applicable to any nonlinear system            
+            options = odeset('RelTol', 10^-13, 'AbsTol', eps);        
+            [~, X] = ode45(@(t, x)vomega_model(x, v, omega), [0, T], x, options);
+            x(1:3) = (X(end, :)).';                
+        else
+            % exact solution
+            if abs(omega) < 1e-12
+                x(1:3) = x(1:3) + [v * T * ck; ...
+                                   v * T * sk; ...
+                                            0];
+            else
+                x(1:3) = x(1:3) + [v / omega * (skp1 - sk); ...
+                                   v / omega * (ck - ckp1); ...
+                                   T * omega];
+            end  
+        end
+
+        
+        % do covariance prediction
+
+        % input error covariance
+        N = diag([block.odometryError^2, block.odometryError^2]);
+
+        if ~block.useExactDiscretization
+            % linearize first...
+            A = [0, 0, -v * sk; ...
+                 0, 0,  v * ck; ...
+                 0, 0,       0];
+            
+            B = [ R_R / 2 * ck,  R_L / 2 * ck; ...
+                  R_R / 2 * sk,  R_L / 2 * sk; ...
+                 R_R / (2 * a), -R_L / (2 * a)];
+             
+            % ...then discretize using the matrix exponential
+            F = expm(A * T);
+            
+            I = eye(size(F));
+            S = T * I;
+            
+            i = 2;
+            while true
+                D = T^i / factorial(i) * A^(i - 1);
+                S = S + D;
+                i = i + 1;
+                if all(abs(D(:)) <= eps); break; end
+            end
+            H = S * B;
+            
+            F = blkdiag(F, eye(size(P, 1) - 3));
+            P = F * P * F.';
+            P(1:3, 1:3) = P(1:3, 1:3) + H * N * H.';
+        else
+            % discretize first (only applicable, if ODEs can be solved
+            % analytically), then linearize the discrete model
+
+            if abs(omega) < 1e-12
+                A_dis = [1, 0, -v * T * sk; ...
+                         0, 1, v * T * ck; ...
+                         0, 0, 1];
+                B_dis = [R_R * T / 2 * ck, R_L * T / 2 * ck; ...
+                         R_R * T / 2 * sk, R_L * T / 2 * ck; ...
+                                        0,                0];
+            else
+                A_dis = [1, 0, v / omega * (ckp1 - ck); ...
+                         0, 1, v / omega * (skp1 - sk); ...
+                         0, 0,                       1];
+                B_dis = [R_R / (2 * omega) * (v * T / a * ckp1 + R_L * dtheta_L / (a * omega) * (sk - skp1)), ...
+                                -R_L / (2 * omega) * (v * T / a * ckp1 + R_R * dtheta_R / (a * omega) * (sk - skp1)); ...
+                         R_R / (2 * omega) * (v * T / a * skp1 - R_L * dtheta_L / (a * omega) * (ck - ckp1)), ...
+                                -R_L / (2 * omega) * (v * T / a * skp1 - R_R * dtheta_R / (a * omega) * (ck - ckp1)); ...
+                         R_R * T / (2 * a), -R_L * T / (2 * a)];
+            end
+            
+            A_dis = blkdiag(A_dis, eye(size(P, 1) - 3));
+            P = A_dis * P * A_dis.';            
+            P(1:3, 1:3) = P(1:3, 1:3) + B_dis * N * B_dis.';
+        end
     end
 
     function [x, P, features] = doUpdate(x, P, features, meas)
@@ -205,10 +296,32 @@ function [state, out, debugOut] = filterStep(block, t, state, odometer, sensor, 
             pose = x(1:3);
             c = cos(pose(3) + bearings);
             s = sin(pose(3) + bearings);
-            
-            % TODO: implement the landmark initialization here
-            
-                            
+            % extend state vector with initial x/y estimates of new features
+            x = [x; reshape([pose(1) + ranges .* c; pose(2) + ranges .* s], [], 1)];
+
+            % intermediate covariance matrix for old state combined with new measurements
+            bearingErrors = repmat(block.bearingError^2, 1, length(midx_new));
+            rangeErrors = (block.rangeError * ranges).^2;
+            P_helper = blkdiag(P, diag(reshape([bearingErrors; rangeErrors], 1, [])));
+
+            % matrix to transform P_helper into covariance for extended state
+            J = zeros(length(x), len + 2 * length(midx_new));			
+            J(sub2ind(size(J), 1:len, 1:len)) = 1; % keep old state variables -> top-left block is identity matrix
+            x_rows = len + (1:2:(2 * length(midx_new)));
+            y_rows = len + (2:2:(2 * length(midx_new)));
+            J(x_rows, 1) = 1;
+            J(y_rows, 2) = 1;
+            J(x_rows, 3) = -ranges .* s;
+            J(y_rows, 3) = ranges .* c;
+            bearing_cols = len + (1:2:(2 * length(midx_new)));
+            range_cols = len + (2:2:(2 * length(midx_new)));
+            J(sub2ind(size(J), x_rows, bearing_cols)) = J(x_rows, 3);
+            J(sub2ind(size(J), y_rows, bearing_cols)) = J(y_rows, 3);
+            J(sub2ind(size(J), x_rows, range_cols)) = c;
+            J(sub2ind(size(J), y_rows, range_cols)) = s;	
+
+            % extend state covariance (using the transformation J), process noise Q and landmark association data
+            P = J * P_helper * J';                
             features = [features; visIdx(midx_new)];
         end
 
@@ -224,9 +337,47 @@ function [state, out, debugOut] = filterStep(block, t, state, odometer, sensor, 
             x_idx = 2 + 2 * fidx_old';
             y_idx = 3 + 2 * fidx_old';
 
-            % TODO: implement the update step here
-            
-            
+            deltas = [x(x_idx) - x(1), x(y_idx) - x(2)];
+
+            if block.useBearing
+                % predict bearing measurements
+                z = atan2(deltas(:, 2), deltas(:, 1)) - x(3);
+                % determine innovation from bearing measurements
+                delta_y = [delta_y; mod(meas.bearing(midx_old) - z + pi, 2 * pi) - pi];
+
+                % fill in corresponding entries in the jacobi matrix
+                denoms = sum(deltas.^2, 2);
+                C_b = zeros(length(midx_old), length(x));
+                C_b(:, [1 2]) = [deltas(:, 2) ./ denoms, -deltas(:, 1) ./ denoms];
+                C_b(:, 3) = -1;
+                C_b(sub2ind(size(C_b), 1:length(midx_old), x_idx)) = -deltas(:, 2) ./ denoms;
+                C_b(sub2ind(size(C_b), 1:length(midx_old), y_idx)) = deltas(:, 1) ./ denoms;
+                C = [C; C_b];
+
+                % covariance of measurement noise -> for bearing measurements independent of sensor output
+                W = blkdiag(W, block.bearingError^2 * eye(length(midx_old)));
+            end
+
+            if block.useRange
+
+                % predict range measurements
+                z = sqrt(sum(deltas(:, 1).^2 + deltas(:, 2).^2, 2));
+                % 'real' sensor output
+                ranges = meas.range(midx_old);
+                % compute difference = innovation 
+                delta_y = [delta_y; ranges - z];
+
+                % fill in corresponding entries in the jacobi matrix
+                C_r = zeros(length(midx_old), length(x));
+                C_r(:, [1 2]) = [-deltas(:, 1) ./ z, -deltas(:, 2) ./ z];
+                C_r(sub2ind(size(C_r), 1:length(midx_old), x_idx)) = deltas(:, 1) ./ z;
+                C_r(sub2ind(size(C_r), 1:length(midx_old), y_idx)) = deltas(:, 2) ./ z;
+                C = [C; C_r];
+
+                % covariance of measurement noise (noise scales with distance)
+                W = blkdiag(W, diag((block.rangeError * ranges).^2));				
+            end
+
             % compute Kalman gain matrix
             K = P * C' / (C * P * C' + W);
 
